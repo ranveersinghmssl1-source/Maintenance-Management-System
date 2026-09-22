@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS - Maintenance Management System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f4f6f9; color: #333; display: flex; justify-content: center; align-content: center; min-height: 100vh; flex-direction: column; }
+        .login-container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; margin: auto; }
+        .login-container h2 { margin-bottom: 20px; text-align: center; color: #2c3e50; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .btn { width: 100%; padding: 12px; background: #3498db; border: none; color: white; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        .btn:hover { background: #2980b9; }
+        .dashboard { display: none; padding: 20px; width: 100%; max-width: 1200px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #2c3e50; color: white; padding: 20px; border-radius: 8px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; border-top: 4px solid #3498db; }
+        .kpi-card h3 { font-size: 14px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 10px; }
+        .kpi-card p { font-size: 28px; font-weight: bold; color: #2c3e50; }
+        .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .module-box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .module-box h3 { margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+        .logout-btn { background: #e74c3c; padding: 8px 15px; color: white; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .logout-btn:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+
+    <!-- SECURE LOGIN SCREEN -->
+    <div id="loginPage" class="login-container">
+        <h2>CMMS Portal Login</h2>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Enter username...">
+        </div>
+        <div class="form-group">
+            <label>Role Portal Access</label>
+            <select id="userRole">
+                <option value="Admin">Admin Panel (Full Access)</option>
+                <option value="Operator">Operator Entry Window</option>
+                <option value="Maintenance">Maintenance Tech Console</option>
+            </select>
+        </div>
+        <button class="btn" onclick="handleLogin()">Sign In to Dashboard</button>
+    </div>
+
+    <!-- MAIN OPERATIONAL DASHBOARD -->
+    <div id="dashboardPage" class="dashboard">
+        <div class="header">
+            <div>
+                <h2>Maintenance Management System (CMMS)</h2>
+                <p id="welcomeText">Welcome, User</p>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">Secure Logout</button>
+        </div>
+
+        <!-- LIVE METRICS COUNTERS -->
+        <div class="kpi-grid">
+            <div class="kpi-card" style="border-top-color: #e74c3c;">
+                <h3>Active Open Breakdowns</h3>
+                <p id="openCount">0</p>
+            </div>
+            <div class="kpi-card" style="border-top-color: #2ecc71;">
+                <h3>Closed Tickets Today</h3>
+                <p id="closedCount">0</p>
+            </div>
+            <div class="kpi-card" style="border-top-color: #f1c40f;">
+                <h3>Mean Time To Repair (MTTR)</h3>
+                <p id="mttrValue">0 Mins</p>
+            </div>
+            <div class="kpi-card" style="border-top-color: #9b59b6;">
+                <h3>Plant OEE Status</h3>
+                <p id="oeeValue">85.5%</p>
+            </div>
+        </div>
+
+        <!-- FUNCTIONAL MODULE FORMS GRID -->
+        <div class="modules-grid">
+            <!-- OPERATOR MODULE -->
+            <div class="module-box" id="operatorMod">
+                <h3>1. Operator Breakdown Log Entry</h3>
+                <div class="form-group">
+                    <label>Machine Serial Number</label>
+                    <input type="text" id="macNo" placeholder="e.g. MAC-101">
+                </div>
+                <div class="form-group">
+                    <label>Problem Type / Description</label>
+                    <input type="text" id="probDesc" placeholder="e.g. Hydraulic Leakage">
+                </div>
+                <button class="btn" onclick="raiseTicket()">Auto Generate Ticket</button>
+            </div>
+
+            <!-- MAINTENANCE MODULE -->
+            <div class="module-box" id="maintenanceMod">
+                <h3>2. Maintenance Action & Closure</h3>
+                <div class="form-group">
+                    <label>Active Ticket ID (Numeric)</label>
+                    <input type="number" id="tktId" placeholder="e.g. 1">
+                </div>
+                <div class="form-group">
+                    <label>Technician Assigned Name</label>
+                    <input type="text" id="techName" placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Action Taken Log</label>
+                    <input type="text" id="actionTaken" placeholder="e.g. Replaced O-Ring Seal">
+                </div>
+                <button class="btn" style="background:#2ecc71;" onclick="closeTicket()">Resolve & Close Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Backend Base URL Vector
+        const API_BASE = "http://127.0.0";
+
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const role = document.getElementById('userRole').value;
+            if(!user) { alert("Please enter a valid username."); return; }
+
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'block';
+            document.getElementById('welcomeText').innerText = `Role Profile: ${role} Account`;
+            
+            // Dynamic Role-Based UI Display View Filters
+            if(role === "Operator") document.getElementById('maintenanceMod').style.display = 'none';
+            if(role === "Maintenance") document.getElementById('operatorMod').style.display = 'none';
+            
+            fetchLiveMetrics();
+        }
+
+        function handleLogout() {
+            window.location.reload();
+        }
+
+        async function fetchLiveMetrics() {
+            try {
+                const res = await fetch(`${API_BASE}/dashboard/metrics`);
+                const data = await res.json();
+                document.getElementById('openCount').innerText = data.counters.open_breakdowns;
+                document.getElementById('closedCount').innerText = data.counters.closed_breakdowns;
+                document.getElementById('mttrValue').innerText = `${data.counters.mean_time_to_repair_minutes} Mins`;
+                document.getElementById('oeeValue').innerText = data.performance_analytics.overall_equipment_effectiveness_oee;
+            } catch (err) { console.error("Metrics API integration sync offline.", err); }
+        }
+
+        async function raiseTicket() {
+            const machine_number = document.getElementById('macNo').value;
+            const problem_type = document.getElementById('probDesc').value;
+            if(!machine_number || !problem_type) { alert("Fill all standard parameter modules."); return; }
+
+            try {
+                const res = await fetch(`${API_BASE}/tickets/raise`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ machine_number, problem_type, operator_code: "OP-01" })
+                });
+                const data = await res.json();
+                if(res.status === 404) { alert(data.detail); return; }
+                alert(`Success! Auto-Generated Ticket Reference: ${data.auto_ticket_no}`);
+                fetchLiveMetrics();
+            } catch(e) { alert("Ticket could not be raised. Check if Backend server is active."); }
+        }
+
+        async function closeTicket() {
+            const id = document.getElementById('tktId').value;
+            const technician_name = document.getElementById('techName').value;
+            const action_taken = document.getElementById('actionTaken').value;
+            if(!id || !technician_name) { alert("Provide primary target operational tracking index."); return; }
+
+            try {
+                const res = await fetch(`${API_BASE}/tickets/update/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ technician_name, action_taken, reason: "Normal Wear and Tear", status: "Closed" })
+                });
+                const data = await res.json();
+                alert(`Ticket status updated. Logged Mean Repair Duration (MTTR): ${data.calculated_mttr_minutes} Minutes.`);
+                fetchLiveMetrics();
+            } catch(e) { alert("Update processing server error matrix."); }
+        }
+    </script>
+</body>
